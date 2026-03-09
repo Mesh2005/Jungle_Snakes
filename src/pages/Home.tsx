@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Play, Trophy, Users, Settings as SettingsIcon, LogOut, LayoutGrid, Zap, Flame, HelpCircle, Gamepad2 } from 'lucide-react';
+import { Play, Trophy, Users, Settings as SettingsIcon, LogOut, LayoutGrid, Zap, Flame, HelpCircle, Gamepad2, Music, VolumeX } from 'lucide-react';
 import Modal from '../components/ui/Modal';
 import { FallingSnakes } from '../components/FallingSnakes';
 import { useTrivia } from '../hooks/useTrivia';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
+import { useAudio } from '../context/AudioContext';
 
 type Difficulty = 'easy' | 'medium' | 'hard';
 
@@ -22,6 +23,7 @@ const Home = () => {
     const [showDifficultyModal, setShowDifficultyModal] = useState(false);
     const trivia = useTrivia();
     const [displayName, setDisplayName] = useState<string | null>(null);
+    const { musicEnabled, setMusicEnabled } = useAudio();
 
     useEffect(() => {
         const loadName = async () => {
@@ -89,10 +91,10 @@ const Home = () => {
                 <div className="absolute bottom-[20%] left-[40%] w-40 h-40 rounded-full bg-[var(--theme-accent)]/10 blur-[45px] animate-float-slow" style={{ animationDuration: '12s', animationDelay: '4s' }} />
             </div>
 
-            <main className="flex-grow container mx-auto px-4 flex flex-col items-center justify-center py-12 relative z-10 w-full max-w-4xl">
+            <main className="flex-1 container mx-auto px-4 flex flex-col items-center justify-center py-6 md:py-10 relative z-10 w-full max-w-4xl">
 
                 {/* Game Title Header */}
-                <div className="text-center mb-10 w-full">
+                <div className="text-center mb-6 md:mb-10 w-full">
                     {user && displayName && (
                         <p className="text-sm md:text-base font-medium tracking-[0.2em] uppercase text-[var(--theme-accent)]/80 mb-2">
                             Welcome, <span className="text-[var(--theme-accent)] font-bold">{displayName}</span>
@@ -118,7 +120,7 @@ const Home = () => {
                 )}
 
                 {/* Main Game Menu UI */}
-                <div className="w-full flex flex-col gap-6 items-center">
+                <div className="w-full flex flex-col gap-4 md:gap-6 items-center">
 
                     {/* Giant Play Button */}
                     <button
@@ -135,14 +137,18 @@ const Home = () => {
                                 <Play className="w-10 h-10 text-[var(--theme-accent)] fill-[var(--theme-accent)] translate-x-1" />
                             </div>
                             <div className="text-center">
-                                <h2 className="text-3xl font-extrabold text-white tracking-widest uppercase mb-1 drop-shadow-md">Play the Game</h2>
-                                <p className="text-[var(--theme-text-dim)] text-sm font-medium">Enter the fray & hunt your high score</p>
+                                <h2 className="text-3xl font-extrabold text-[var(--theme-text)] tracking-widest uppercase mb-1 drop-shadow-md">
+                                    Play the Game
+                                </h2>
+                                <p className="text-[var(--theme-text-dim)] text-sm font-medium">
+                                    Enter the fray &amp; hunt your high score
+                                </p>
                             </div>
                         </div>
                     </button>
 
                     {/* Secondary Navigation Buttons Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-4xl mt-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 w-full max-w-4xl mt-3 md:mt-4">
                         {/* Daily Achievements */}
                         <div
                             onClick={() => navigate('/achievements')}
@@ -152,8 +158,12 @@ const Home = () => {
                                     <Trophy className="w-7 h-7 text-[var(--theme-accent)]" />
                                 </div>
                                 <div className="select-none">
-                                    <h3 className="text-xl font-bold text-white mb-1">Achievements</h3>
-                                    <p className="text-xs text-[var(--theme-text-dim)]">Daily mission progress</p>
+                                    <h3 className="text-xl font-bold text-[var(--theme-text)] mb-1">
+                                        Achievements
+                                    </h3>
+                                    <p className="text-xs text-[var(--theme-text-dim)]">
+                                        Daily mission progress
+                                    </p>
                                 </div>
                                 <button className="mt-2 text-xs font-bold text-[var(--theme-accent)] px-4 py-2 rounded-lg bg-[var(--theme-accent)]/10 border border-[var(--theme-accent)]/20 hover:bg-[var(--theme-accent)]/20 transition-all uppercase tracking-wider">View Tasks</button>
                             </div>
@@ -168,8 +178,12 @@ const Home = () => {
                                     <LayoutGrid className="w-7 h-7 text-[var(--theme-accent)]" />
                                 </div>
                                 <div>
-                                    <h3 className="text-xl font-bold text-white mb-1">Leaderboard</h3>
-                                    <p className="text-xs text-[var(--theme-text-dim)]">Top 10 survivors</p>
+                                    <h3 className="text-xl font-bold text-[var(--theme-text)] mb-1">
+                                        Leaderboard
+                                    </h3>
+                                    <p className="text-xs text-[var(--theme-text-dim)]">
+                                        Top 10 survivors
+                                    </p>
                                 </div>
                                 <button className="mt-2 text-xs font-bold text-[var(--theme-accent)] px-4 py-2 rounded-lg bg-[var(--theme-accent)]/10 border border-[var(--theme-accent)]/20 hover:bg-[var(--theme-accent)]/20 transition-all uppercase tracking-wider">Hall of Fame</button>
                             </div>
@@ -184,8 +198,12 @@ const Home = () => {
                                     <SettingsIcon className="w-7 h-7 text-[var(--theme-accent)]" />
                                 </div>
                                 <div>
-                                    <h3 className="text-xl font-bold text-white mb-1">Settings</h3>
-                                    <p className="text-xs text-[var(--theme-text-dim)]">Controls & Audio</p>
+                                    <h3 className="text-xl font-bold text-[var(--theme-text)] mb-1">
+                                        Settings
+                                    </h3>
+                                    <p className="text-xs text-[var(--theme-text-dim)]">
+                                        Controls &amp; Audio
+                                    </p>
                                 </div>
                                 <button className="mt-2 text-xs font-bold text-[var(--theme-accent)] px-4 py-2 rounded-lg bg-[var(--theme-accent)]/10 border border-[var(--theme-accent)]/20 hover:bg-[var(--theme-accent)]/20 transition-all uppercase tracking-wider">Configure</button>
                             </div>
@@ -194,6 +212,28 @@ const Home = () => {
 
                 </div>
             </main>
+
+            {/* Floating music toggle (right-center) */}
+            <div className="fixed right-4 top-1/2 -translate-y-1/2 z-40 md:right-8">
+                <button
+                    type="button"
+                    onClick={() => setMusicEnabled(!musicEnabled)}
+                    aria-pressed={musicEnabled}
+                    aria-label={musicEnabled ? 'Turn music off' : 'Turn music on'}
+                    className="glass-panel flex flex-col items-center gap-1 px-3 py-3 rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-surface-strong)]/80 hover:border-[var(--theme-accent)] hover:shadow-[0_0_25px_var(--theme-glow)] transition-all"
+                >
+                    <div className="w-9 h-9 rounded-full flex items-center justify-center bg-[var(--theme-accent)]/15 text-[var(--theme-accent)]">
+                        {musicEnabled ? (
+                            <Music className="w-5 h-5" />
+                        ) : (
+                            <VolumeX className="w-5 h-5" />
+                        )}
+                    </div>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--theme-text-dim)]">
+                        Music {musicEnabled ? 'On' : 'Off'}
+                    </span>
+                </button>
+            </div>
 
             {/* Difficulty picker modal */}
             <Modal

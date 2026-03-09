@@ -25,9 +25,9 @@ const Leaderboard = () => {
     }, []);
 
     const rankIcon = (rank: number) => {
-        if (rank === 1) return <Medal className="w-6 h-6 text-amber-400" />;
-        if (rank === 2) return <Medal className="w-6 h-6 text-gray-300" />;
-        if (rank === 3) return <Medal className="w-6 h-6 text-amber-600" />;
+        if (rank === 1) return <Medal className="w-7 h-7 text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.7)]" />;
+        if (rank === 2) return <Medal className="w-7 h-7 text-slate-300 drop-shadow-[0_0_8px_rgba(148,163,184,0.7)]" />;
+        if (rank === 3) return <Medal className="w-7 h-7 text-orange-400 drop-shadow-[0_0_8px_rgba(251,146,60,0.7)]" />;
         return <span className="text-gray-400 font-bold w-6 text-center">{rank}</span>;
     };
 
@@ -75,35 +75,57 @@ const Leaderboard = () => {
 
                 {!loading && !error && entries.length > 0 && (
                     <ul className="space-y-2">
-                        {entries.map((entry, index) => (
-                            <li
-                                key={entry.userId}
-                                className="glass-panel bg-[var(--theme-surface)] flex items-center gap-4 p-4 rounded-xl border border-[var(--theme-border)] hover:border-[var(--theme-accent)]/50 transition-colors"
-                            >
-                                <div className="flex items-center justify-center w-10">
-                                    {rankIcon(index + 1)}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <p className="font-semibold text-[var(--theme-text)] truncate" title={entry.email}>
-                                        {entry.email}
-                                    </p>
-                                    <p className="text-xs text-[var(--theme-text-dim)]">
-                                        Best streak: <span className="text-[var(--theme-accent)]">{entry.bestStreak}</span>
-                                    </p>
-                                </div>
-                                <div className="text-right">
-                                    <p className="text-xl font-bold text-[var(--theme-accent)]">{entry.bestScore}</p>
-                                    <p className="text-xs text-[var(--theme-text-dim)]/70">best score</p>
-                                    <p className="text-[11px] text-[var(--theme-text-dim)] mt-1">
-                                        Games: <span className="text-[var(--theme-text)] font-semibold">{entry.totalGames}</span>
-                                        {' · '}
-                                        Avg: <span className="text-[var(--theme-text)] font-semibold">
-                                            {entry.avgScore.toFixed(1)}
-                                        </span>
-                                    </p>
-                                </div>
-                            </li>
-                        ))}
+                        {entries.map((entry, index) => {
+                            const rank = index + 1;
+                            const isTopThree = rank <= 3;
+
+                            return (
+                                <li
+                                    key={entry.userId}
+                                    className={[
+                                        'glass-panel flex items-center gap-4 p-4 rounded-xl border transition-all duration-200',
+                                        isTopThree
+                                            ? 'bg-gradient-to-r from-[var(--theme-surface-strong)] via-[var(--theme-surface)] to-[var(--theme-surface)] border-[var(--theme-accent)]/60 shadow-[0_0_25px_var(--theme-glow)] scale-[1.02]'
+                                            : 'bg-[var(--theme-surface)] border-[var(--theme-border)] hover:border-[var(--theme-accent)]/50',
+                                    ].join(' ')}
+                                >
+                                    <div className="flex flex-col items-center justify-center w-12">
+                                        {rankIcon(rank)}
+                                        {isTopThree && (
+                                            <span className="mt-1 text-[10px] font-black uppercase tracking-widest text-[var(--theme-text-dim)]">
+                                                #{rank}
+                                            </span>
+                                        )}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="font-semibold text-[var(--theme-text)] truncate">
+                                            {entry.displayName}
+                                        </p>
+                                        <p className="text-xs text-[var(--theme-text-dim)]">
+                                            Best streak:{' '}
+                                            <span className="text-[var(--theme-accent)]">{entry.bestStreak}</span>
+                                        </p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-xl font-bold text-[var(--theme-accent)]">
+                                            {entry.bestScore}
+                                        </p>
+                                        <p className="text-xs text-[var(--theme-text-dim)]/70">best score</p>
+                                        <p className="text-[11px] text-[var(--theme-text-dim)] mt-1">
+                                            Games:{' '}
+                                            <span className="text-[var(--theme-text)] font-semibold">
+                                                {entry.totalGames}
+                                            </span>
+                                            {' · '}
+                                            Avg:{' '}
+                                            <span className="text-[var(--theme-text)] font-semibold">
+                                                {entry.avgScore.toFixed(1)}
+                                            </span>
+                                        </p>
+                                    </div>
+                                </li>
+                            );
+                        })}
                     </ul>
                 )}
             </div>

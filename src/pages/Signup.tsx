@@ -158,11 +158,11 @@ const Signup = () => {
             <div className="relative w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-10 items-center z-10">
                 {/* Left: Game name + benefits */}
                 <div className="order-2 md:order-1 space-y-6">
-                    <p className="text-xs uppercase tracking-[0.35em] text-[var(--theme-accent)]/80 mb-2">
+                    <p className="text-xs uppercase tracking-[0.35em] text-[var(--theme-accent)] mb-2">
                         Create your hunter profile
                     </p>
                     <h1 className="text-4xl md:text-5xl font-extrabold leading-tight">
-                        <span className="block text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-accent)] via-white to-[var(--theme-accent-alt)] drop-shadow-[0_0_20px_var(--theme-glow)]">
+                        <span className="block text-transparent bg-clip-text bg-gradient-to-r from-[var(--theme-accent)] via-[var(--theme-text)] to-[var(--theme-accent-alt)] drop-shadow-[0_0_20px_var(--theme-glow)]">
                             JUNGLE SNAKE
                         </span>
                         <span className="block mt-2 text-[var(--theme-text-dim)] text-lg md:text-xl font-semibold">
@@ -171,13 +171,13 @@ const Signup = () => {
                     </h1>
 
                     <ul className="space-y-3 text-[var(--theme-text-dim)] text-sm mt-4">
-                        <li className="glass-panel bg-white/5 border border-[var(--theme-border)] rounded-2xl px-4 py-3">
+                        <li className="glass-panel bg-[var(--theme-surface)] border border-[var(--theme-border)] rounded-2xl px-4 py-3">
                             <span className="font-semibold text-[var(--theme-accent)]">Save best scores & streaks</span>
                             <p className="text-xs text-[var(--theme-text-dim)]/80">
                                 Your highest scores and hottest streaks stay linked to your account.
                             </p>
                         </li>
-                        <li className="glass-panel bg-white/5 border border-[var(--theme-border)] rounded-2xl px-4 py-3">
+                        <li className="glass-panel bg-[var(--theme-surface)] border border-[var(--theme-border)] rounded-2xl px-4 py-3">
                             <span className="font-semibold text-[var(--theme-accent)]">Play across devices</span>
                             <p className="text-xs text-[var(--theme-text-dim)]/80">
                                 Log in from anywhere and keep your game progress in sync.
@@ -209,7 +209,7 @@ const Signup = () => {
                             </button>
                             <button
                                 type="button"
-                                className="px-3 py-1.5 rounded-full bg-[var(--theme-accent)] text-[var(--theme-selection-text)] shadow-sm"
+                                className="px-3 py-1.5 rounded-full bg-[var(--theme-accent)] text-white shadow-sm"
                                 role="tab"
                                 aria-selected="true"
                             >
@@ -329,7 +329,7 @@ const Signup = () => {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full flex justify-center items-center gap-2 py-3 px-4 rounded-xl text-sm font-semibold text-[var(--theme-selection-text)] bg-gradient-to-r from-[var(--theme-accent)] to-[var(--theme-accent-alt)] shadow-[0_0_25px_var(--theme-glow)] hover:shadow-[0_0_35px_var(--theme-glow-strong)] hover:-translate-y-0.5 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                            className="w-full flex justify-center items-center gap-2 py-3 px-4 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-[var(--theme-accent)] to-[var(--theme-accent-alt)] shadow-[0_0_25px_var(--theme-glow)] hover:shadow-[0_0_35px_var(--theme-glow-strong)] hover:-translate-y-0.5 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                         >
                             {loading ? 'Creating account...' : <><UserPlus className="w-4 h-4" /> Sign Up</>}
                         </button>

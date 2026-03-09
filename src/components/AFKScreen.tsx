@@ -85,10 +85,10 @@ const AFKScreen: React.FC<AFKScreenProps> = ({ onAction, timeoutSeconds = 30 }) 
 
                 {/* Text Content */}
                 <div className="space-y-4">
-                    <h2 className="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white via-[var(--theme-accent)] to-[var(--theme-text-dim)] tracking-tighter drop-shadow-xl">
+                    <h2 className="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-b from-[var(--theme-text)] via-[var(--theme-accent)] to-[var(--theme-text-dim)] tracking-tighter drop-shadow-xl">
                         STILL THERE?
                     </h2>
-                    <p className="text-[var(--theme-text-dim)] text-lg md:text-xl font-medium tracking-widest uppercase opacity-80">
+                    <p className="text-[var(--theme-text)] text-lg md:text-xl font-medium tracking-widest uppercase opacity-90">
                         The jungle doesn't wait for anyone.
                     </p>
                 </div>
@@ -101,8 +101,13 @@ const AFKScreen: React.FC<AFKScreenProps> = ({ onAction, timeoutSeconds = 30 }) 
                             <Zap className="w-4 h-4" />
                         </div>
                         <div className="space-y-1">
-                            <span className="text-[10px] font-black uppercase tracking-widest text-[var(--theme-accent)] opacity-70">Jungle Lore</span>
-                            <p key={factIndex} className="text-sm md:text-base text-white/90 font-medium leading-relaxed animate-[fadeIn_0.5s_ease-out]">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-[var(--theme-accent)] opacity-80">
+                                Jungle Lore
+                            </span>
+                            <p
+                                key={factIndex}
+                                className="text-sm md:text-base text-[var(--theme-text)] font-medium leading-relaxed animate-[fadeIn_0.5s_ease-out]"
+                            >
                                 {FOREST_FACTS[factIndex]}
                             </p>
                         </div>
