@@ -389,40 +389,6 @@ const GamePage = () => {
                     </div>
                 )}
 
-                {/* Difficulty modifiers */}
-                <div className="flex flex-wrap items-center justify-center gap-2 text-[11px] text-[var(--theme-text-dim)]">
-                    {difficulty === 'easy' && (
-                        <>
-                            <span className="px-2 py-1 rounded-full bg-[var(--theme-surface)] border border-[var(--theme-accent)]/40 text-[var(--theme-accent)]">
-                                🐍 Slow snake
-                            </span>
-                            <span className="px-2 py-1 rounded-full bg-[var(--theme-surface)] border border-[var(--theme-border)]">
-                                ⏱ Longer timer
-                            </span>
-                        </>
-                    )}
-                    {difficulty === 'medium' && (
-                        <>
-                            <span className="px-2 py-1 rounded-full bg-[var(--theme-surface)] border border-[var(--theme-accent-alt)]/40 text-[var(--theme-accent-alt)]">
-                                ⚖ Balanced speed
-                            </span>
-                            <span className="px-2 py-1 rounded-full bg-[var(--theme-surface)] border border-[var(--theme-border)]">
-                                ⏱ Standard timer
-                            </span>
-                        </>
-                    )}
-                    {difficulty === 'hard' && (
-                        <>
-                            <span className="px-2 py-1 rounded-full bg-[var(--theme-surface)] border border-red-500/60 text-red-400">
-                                ⚡ Fast snake
-                            </span>
-                            <span className="px-2 py-1 rounded-full bg-[var(--theme-surface)] border border-red-500/40 text-red-300">
-                                ⏳ Short timer
-                            </span>
-                        </>
-                    )}
-                </div>
-
             </div>
 
             {/* Right Panel: Desktop Stats */}
