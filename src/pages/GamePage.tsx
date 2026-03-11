@@ -227,7 +227,7 @@ const GamePage = () => {
             <div className="w-full md:w-1/4 flex flex-col gap-4 md:max-h-full md:overflow-y-auto">
                 <button
                     onClick={() => navigate('/home')}
-                    className="glass-panel p-5 rounded-xl hover:bg-[var(--theme-surface-strong)] transition-all flex items-center justify-center gap-3 text-base font-bold text-[var(--theme-accent)] border-2 border-[var(--theme-accent)]/60 w-full shadow-[0_0_15px_var(--theme-glow)] hover:shadow-[0_0_25px_var(--theme-glow-strong)] hover:scale-105 relative z-10 bg-[var(--theme-surface)]"
+                    className="p-5 rounded-xl bg-[var(--theme-surface)] hover:bg-[var(--theme-surface-strong)] transition-colors flex items-center justify-center gap-3 text-base font-bold text-[var(--theme-accent)] border border-[var(--theme-accent)]/60 w-full relative z-10"
                 >
                     <Home className="w-5 h-5 flex-shrink-0" />
                     <span className="whitespace-nowrap">Back to Lobby</span>
