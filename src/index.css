@@ -476,3 +476,11 @@
     transform: translateY(0);
   }
 }
+
+/* Global animations toggle (used by Settings "VFX" switch) */
+.no-anim *,
+.no-anim *::before,
+.no-anim *::after {
+  animation: none !important;
+  transition: none !important;
+}

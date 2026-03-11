@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
+import { signInWithEmailAndPassword, signInWithPopup, sendEmailVerification } from 'firebase/auth';
 import { auth, googleProvider } from '../services/firebase';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, LogIn, AlertCircle, Volume2, VolumeX } from 'lucide-react';
@@ -81,8 +81,18 @@ const Login = () => {
         setLoading(true);
         setError('');
         try {
-            await signInWithPopup(auth, googleProvider);
-            navigate('/home');
+            const cred = await signInWithPopup(auth, googleProvider);
+            const u = cred.user;
+            if (u && !u.emailVerified) {
+                try {
+                    await sendEmailVerification(u);
+                } catch {
+                    // ignore send failures; user can retry on verify page
+                }
+                navigate('/verify-email', { replace: true });
+            } else {
+                navigate('/home');
+            }
         } catch (err: any) {
             if (err?.code === 'auth/popup-closed-by-user') {
                 // Silent
@@ -109,8 +119,18 @@ const Login = () => {
         setEmailError('');
 
         try {
-            await signInWithEmailAndPassword(auth, email, password);
-            navigate('/home');
+            const cred = await signInWithEmailAndPassword(auth, email, password);
+            const u = cred.user;
+            if (u && !u.emailVerified) {
+                try {
+                    await sendEmailVerification(u);
+                } catch {
+                    // ignore send failures; user can retry on verify page
+                }
+                navigate('/verify-email', { replace: true });
+            } else {
+                navigate('/home');
+            }
         } catch (err: any) {
             const message = mapAuthError(err?.code);
             setError(message);

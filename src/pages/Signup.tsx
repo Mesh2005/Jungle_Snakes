@@ -96,7 +96,16 @@ const Signup = () => {
                 },
                 { merge: true }
             );
-            navigate('/home', { replace: true });
+            if (u && !u.emailVerified) {
+                try {
+                    await sendEmailVerification(u);
+                } catch {
+                    // ignore, user can resend from verify page
+                }
+                navigate('/verify-email', { replace: true });
+            } else {
+                navigate('/home', { replace: true });
+            }
         } catch (err: any) {
             if (err?.code === 'auth/popup-closed-by-user') {
                 // Ignore

@@ -20,6 +20,12 @@ const Settings = () => {
 
     useEffect(() => {
         localStorage.setItem('animationsEnabled', animationsEnabled.toString());
+        const root = document.documentElement;
+        if (animationsEnabled) {
+            root.classList.remove('no-anim');
+        } else {
+            root.classList.add('no-anim');
+        }
     }, [animationsEnabled]);
 
     const themes: { id: 'jungle' | 'neon' | 'day' | 'monochrome', name: string, colors: string[], desc: string }[] = [
