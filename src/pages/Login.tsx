@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
 import { auth, googleProvider } from '../services/firebase';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, LogIn, AlertCircle } from 'lucide-react';
+import { Mail, Lock, LogIn, AlertCircle, Volume2, VolumeX } from 'lucide-react';
 import { FallingSnakes } from '../components/FallingSnakes';
+import { useAudio } from '../context/AudioContext';
 
 const EMAIL_STORAGE_KEY = 'jungle-auth-email';
 
@@ -73,6 +74,7 @@ const Login = () => {
     const [error, setError] = useState('');
     const [emailError, setEmailError] = useState('');
     const [loading, setLoading] = useState(false);
+    const { musicEnabled, setMusicEnabled } = useAudio();
     const navigate = useNavigate();
 
     const handleGoogleLogin = async () => {
@@ -172,7 +174,7 @@ const Login = () => {
                         >
                             <button
                                 type="button"
-                                className="px-3 py-1.5 rounded-full bg-[var(--theme-accent)] text-white shadow-sm"
+                                className="px-3 py-1.5 rounded-full bg-[var(--theme-accent)] text-black shadow-sm"
                                 role="tab"
                                 aria-selected="true"
                             >
@@ -286,6 +288,28 @@ const Login = () => {
                         </Link>
                     </div>
                 </div>
+            </div>
+
+            {/* Floating music toggle (right-center) */}
+            <div className="fixed right-4 top-1/2 -translate-y-1/2 z-40 md:right-8">
+                <button
+                    type="button"
+                    onClick={() => setMusicEnabled(!musicEnabled)}
+                    aria-pressed={musicEnabled}
+                    aria-label={musicEnabled ? 'Turn music off' : 'Turn music on'}
+                    className="glass-panel flex flex-col items-center gap-1 px-3 py-3 rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-surface-strong)]/80 hover:border-[var(--theme-accent)] hover:shadow-[0_0_25px_var(--theme-glow)] transition-all"
+                >
+                    <div className="w-9 h-9 rounded-full flex items-center justify-center bg-[var(--theme-accent)]/15 text-[var(--theme-accent)]">
+                        {musicEnabled ? (
+                            <Volume2 className="w-5 h-5" />
+                        ) : (
+                            <VolumeX className="w-5 h-5" />
+                        )}
+                    </div>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--theme-text-dim)]">
+                        Music {musicEnabled ? 'On' : 'Off'}
+                    </span>
+                </button>
             </div>
         </div>
     );

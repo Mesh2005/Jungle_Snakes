@@ -57,7 +57,7 @@ const Home = () => {
     };
 
     return (
-        <div className="min-h-screen pt-16 flex flex-col relative bg-gradient-to-b from-[var(--theme-bg-base)] to-[var(--theme-bg-secondary)] overflow-hidden">
+        <div className="min-h-screen md:h-[calc(100vh-4rem)] pt-16 flex flex-col relative bg-gradient-to-b from-[var(--theme-bg-base)] to-[var(--theme-bg-secondary)] md:overflow-hidden">
             {/* Extreme Global Glows */}
             <div className="peripheral-glow" />
 
@@ -91,7 +91,7 @@ const Home = () => {
                 <div className="absolute bottom-[20%] left-[40%] w-40 h-40 rounded-full bg-[var(--theme-accent)]/10 blur-[45px] animate-float-slow" style={{ animationDuration: '12s', animationDelay: '4s' }} />
             </div>
 
-            <main className="flex-1 container mx-auto px-4 flex flex-col items-center justify-center py-6 md:py-10 relative z-10 w-full max-w-4xl">
+            <main className="flex-1 container mx-auto px-4 flex flex-col items-center justify-between py-8 md:py-10 relative z-10 w-full max-w-4xl">
 
                 {/* Game Title Header */}
                 <div className="text-center mb-6 md:mb-10 w-full">

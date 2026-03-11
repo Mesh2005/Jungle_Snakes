@@ -26,6 +26,8 @@ const GamePage = () => {
 
     const { playVFX, musicEnabled, setMusicEnabled } = useAudio();
 
+    const [showQuickControls, setShowQuickControls] = useState(false);
+
     useEffect(() => {
         if (!user) return;
         const fetchTotalScore = async () => {
@@ -137,7 +139,7 @@ const GamePage = () => {
         return () => window.removeEventListener('difficultyChanged', handleDifficultyChange as EventListener);
     }, [status]);
 
-    // Keyboard controls
+    // Keyboard controls (desktop)
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             const keys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'w', 'W', 's', 'S', 'a', 'A', 'd', 'D'];
@@ -156,6 +158,47 @@ const GamePage = () => {
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [changeDirection]);
 
+    // Touch controls (mobile): swipe to change direction
+    const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+    useEffect(() => {
+        const handleTouchStart = (e: TouchEvent) => {
+            if (e.touches.length !== 1) return;
+            const t = e.touches[0];
+            touchStartRef.current = { x: t.clientX, y: t.clientY };
+        };
+
+        const handleTouchEnd = (e: TouchEvent) => {
+            if (!touchStartRef.current || e.changedTouches.length === 0) return;
+            const start = touchStartRef.current;
+            const t = e.changedTouches[0];
+            const dx = t.clientX - start.x;
+            const dy = t.clientY - start.y;
+            const distance = Math.hypot(dx, dy);
+
+            // Ignore tiny swipes
+            if (distance < 24) {
+                touchStartRef.current = null;
+                return;
+            }
+
+            if (Math.abs(dx) > Math.abs(dy)) {
+                changeDirection(dx > 0 ? 'RIGHT' : 'LEFT');
+            } else {
+                changeDirection(dy > 0 ? 'DOWN' : 'UP');
+            }
+
+            touchStartRef.current = null;
+        };
+
+        window.addEventListener('touchstart', handleTouchStart, { passive: true });
+        window.addEventListener('touchend', handleTouchEnd, { passive: true });
+
+        return () => {
+            window.removeEventListener('touchstart', handleTouchStart);
+            window.removeEventListener('touchend', handleTouchEnd);
+        };
+    }, [changeDirection]);
+
     // Disable page scroll while actively playing
     useEffect(() => {
         const previousOverflow = document.body.style.overflow;
@@ -171,10 +214,17 @@ const GamePage = () => {
         };
     }, [status]);
 
+    // Hide quick controls when game resets or ends
+    useEffect(() => {
+        if (status === 'IDLE' || status === 'GAME_OVER') {
+            setShowQuickControls(false);
+        }
+    }, [status]);
+
     return (
-        <div className="min-h-screen pt-24 pb-8 flex flex-col md:flex-row max-w-7xl mx-auto px-6 md:px-8 gap-8 md:gap-10">
+        <div className="min-h-screen md:h-[calc(100vh-4rem)] pt-20 pb-6 flex flex-col md:flex-row max-w-7xl mx-auto px-6 md:px-8 gap-6 md:gap-8 md:overflow-hidden">
             {/* Left Panel: Round Info */}
-            <div className="w-full md:w-1/4 flex flex-col gap-6">
+            <div className="w-full md:w-1/4 flex flex-col gap-4 md:max-h-full md:overflow-y-auto">
                 <button
                     onClick={() => navigate('/home')}
                     className="glass-panel p-5 rounded-xl hover:bg-[var(--theme-surface-strong)] transition-all flex items-center justify-center gap-3 text-base font-bold text-[var(--theme-accent)] border-2 border-[var(--theme-accent)]/60 w-full shadow-[0_0_15px_var(--theme-glow)] hover:shadow-[0_0_25px_var(--theme-glow-strong)] hover:scale-105 relative z-10 bg-[var(--theme-surface)]"
@@ -186,6 +236,7 @@ const GamePage = () => {
                     round={currentRound}
                     loading={roundLoading}
                     timeLeft={timeLeft}
+                    obscured={status === 'IDLE' || status === 'PAUSED'}
                 />
 
                 {/* Mobile-only Stats */}
@@ -209,10 +260,44 @@ const GamePage = () => {
                 </div>
             </div>
 
+            {/* Floating music toggle (right side center for this page) */}
+            <div className="fixed right-4 top-1/2 -translate-y-1/2 z-40 md:right-8">
+                <button
+                    type="button"
+                    onClick={() => setMusicEnabled(!musicEnabled)}
+                    aria-pressed={musicEnabled}
+                    aria-label={musicEnabled ? 'Turn music off' : 'Turn music on'}
+                    className="glass-panel flex flex-col items-center gap-1 px-3 py-3 rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-surface-strong)]/80 hover:border-[var(--theme-accent)] hover:shadow-[0_0_25px_var(--theme-glow)] transition-all"
+                >
+                    <div className="w-9 h-9 rounded-full flex items-center justify-center bg-[var(--theme-accent)]/15 text-[var(--theme-accent)]">
+                        {musicEnabled ? (
+                            <Volume2 className="w-5 h-5" />
+                        ) : (
+                            <VolumeX className="w-5 h-5" />
+                        )}
+                    </div>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--theme-text-dim)]">
+                        Music {musicEnabled ? 'On' : 'Off'}
+                    </span>
+                </button>
+            </div>
+
             {/* Center: Game Board */}
             <div className="w-full md:w-1/2 flex flex-col items-center gap-6 relative">
-                <div className="board-shell w-full max-w-2xl border-[var(--theme-border-strong)] bg-[var(--theme-bg-secondary)]/50">
-                    <div className="board-shell-inner aspect-square mx-auto flex items-center justify-center">
+                <div
+                    className="board-shell w-full max-w-2xl border-[var(--theme-border-strong)] bg-[var(--theme-bg-secondary)]/50"
+                    onClick={() => {
+                        if (status === 'PLAYING') {
+                            // Single tap pauses and reveals controls
+                            pauseGame();
+                            setShowQuickControls(true);
+                        } else if (status === 'PAUSED') {
+                            // While paused, tap just reveals controls (if hidden)
+                            setShowQuickControls(true);
+                        }
+                    }}
+                >
+                    <div className={`board-shell-inner aspect-square mx-auto flex items-center justify-center transition duration-200 ${status === 'PAUSED' ? 'blur-sm' : ''}`}>
                         <GameBoard
                             snake={snake}
                             foods={foods}
@@ -235,6 +320,48 @@ const GamePage = () => {
                                     className="px-8 py-4 bg-[var(--theme-accent)] text-[var(--theme-selection-text)] font-bold text-xl rounded-full shadow-[0_0_30px_var(--theme-glow-strong)] hover:scale-105 transition-transform flex items-center gap-2 animate-pulse-slow"
                                 >
                                     <Play className="fill-current" /> START GAME
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                    {/* Quick controls overlay when user taps (centered) */}
+                    {showQuickControls && status !== 'IDLE' && status !== 'GAME_OVER' && (
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none bg-[var(--theme-bg-base)]/40 backdrop-blur-sm">
+                            <div className="flex gap-4 pointer-events-auto">
+                                {status === 'PLAYING' && (
+                                    <button
+                                        type="button"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            pauseGame();
+                                        }}
+                                        className="px-4 py-2 rounded-full bg-[var(--theme-surface-strong)] text-sm font-semibold text-[var(--theme-text)] border border-[var(--theme-border)] shadow-[0_0_20px_var(--theme-glow)]"
+                                    >
+                                        Pause
+                                    </button>
+                                )}
+                                {status === 'PAUSED' && (
+                                    <button
+                                        type="button"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleResumeGame();
+                                            setShowQuickControls(false);
+                                        }}
+                                        className="px-4 py-2 rounded-full bg-[var(--theme-accent)] text-sm font-semibold text-[var(--theme-selection-text)] shadow-[0_0_20px_var(--theme-glow)]"
+                                    >
+                                        Resume
+                                    </button>
+                                )}
+                                <button
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        stopGame();
+                                    }}
+                                    className="px-4 py-2 rounded-full bg-red-600/90 text-sm font-semibold text-white border border-red-400/70 shadow-[0_0_20px_rgba(248,113,113,0.6)]"
+                                >
+                                    Stop
                                 </button>
                             </div>
                         </div>
@@ -296,73 +423,50 @@ const GamePage = () => {
                     )}
                 </div>
 
-                {/* Music Toggle */}
-                <button
-                    type="button"
-                    onClick={() => setMusicEnabled(!musicEnabled)}
-                    className="px-4 py-2 rounded-lg bg-[var(--theme-surface)] text-sm font-semibold hover:bg-[var(--theme-surface-strong)] transition-colors border border-[var(--theme-accent)]/40 text-[var(--theme-accent)] flex items-center gap-2"
-                >
-                    {musicEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
-                    {musicEnabled ? 'Music: On' : 'Music: Off'}
-                </button>
-
-                {/* Pause / Stop Controls */}
-                <div className="flex gap-4">
-                    {status === 'PLAYING' && (
-                        <button
-                            onClick={pauseGame}
-                            className="px-4 py-2 rounded-lg bg-[var(--theme-bg-secondary)] text-sm font-semibold hover:bg-[var(--theme-surface-strong)] transition-colors border border-[var(--theme-border)] text-[var(--theme-text)]"
-                        >
-                            Pause
-                        </button>
-                    )}
-                    {status === 'PAUSED' && (
-                        <button
-                            onClick={handleResumeGame}
-                            className="px-4 py-2 rounded-lg bg-[var(--theme-accent)] text-sm font-semibold text-[var(--theme-selection-text)] hover:opacity-90 transition-colors"
-                        >
-                            Resume
-                        </button>
-                    )}
-                    {status !== 'IDLE' && (
-                        <button
-                            onClick={stopGame}
-                            className="px-4 py-2 rounded-lg bg-red-600/80 text-sm font-semibold hover:bg-red-500 transition-colors border border-red-400/60 text-white"
-                        >
-                            Stop
-                        </button>
-                    )}
-                </div>
-
             </div>
 
             {/* Right Panel: Desktop Stats */}
-            <div className="hidden md:flex w-1/4 flex-col gap-6">
-                <div className="glass-panel p-6 md:p-8 rounded-2xl space-y-6 bg-[var(--theme-surface)] border border-[var(--theme-border)]">
-                    <h3 className="text-lg font-bold text-[var(--theme-text)] border-b border-[var(--theme-border)] pb-2">Session Stats</h3>
+            <div className="hidden md:flex w-1/4 flex-col gap-4 md:max-h-full md:overflow-y-auto">
+                <div className="glass-panel px-4 py-4 rounded-2xl space-y-4 bg-[var(--theme-surface)] border border-[var(--theme-border)]">
+                    <h3 className="text-base font-bold text-[var(--theme-text)] border-b border-[var(--theme-border)] pb-1.5">
+                        Session Stats
+                    </h3>
 
-                    <div className="flex items-center justify-between">
-                        <span className="text-[var(--theme-text-dim)]">Score</span>
-                        <span className="text-2xl font-bold text-[var(--theme-text)] drop-shadow-[0_0_10px_var(--theme-glow)]">{score}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                        <span className="text-[var(--theme-text-dim)]">Streak</span>
-                        <span className="text-2xl font-bold text-[var(--theme-accent)] drop-shadow-[0_0_10px_var(--theme-glow)]">{streak}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                        <span className="text-[var(--theme-text-dim)]">Best Streak</span>
-                        <span className="text-2xl font-bold text-[var(--theme-accent-alt)]">{highStreak}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                        <span className="text-[var(--theme-text-dim)]">Heart</span>
-                        <span className="text-2xl font-bold text-[var(--theme-accent)]">{lives}%</span>
-                    </div>
-                    <div className="space-y-1 pt-2 border-t border-[var(--theme-border)]">
-                        <div className="flex items-center justify-between text-xs">
-                            <span className="text-[var(--theme-text-dim)]">Hot streak</span>
-                            <span className="text-[var(--theme-accent)] font-semibold">{streak} in a row</span>
+                    <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                            <span className="text-[11px] text-[var(--theme-text-dim)]">Score</span>
+                            <span className="text-lg font-bold text-[var(--theme-text)] drop-shadow-[0_0_8px_var(--theme-glow)]">
+                                {score}
+                            </span>
                         </div>
-                        <div className="w-full h-2 rounded-full bg-[var(--theme-bg-base)]/80 overflow-hidden">
+                        <div className="flex items-center justify-between">
+                            <span className="text-[11px] text-[var(--theme-text-dim)]">Streak</span>
+                            <span className="text-lg font-bold text-[var(--theme-accent)] drop-shadow-[0_0_8px_var(--theme-glow)]">
+                                {streak}
+                            </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                            <span className="text-[11px] text-[var(--theme-text-dim)]">Best Streak</span>
+                            <span className="text-lg font-bold text-[var(--theme-accent-alt)]">
+                                {highStreak}
+                            </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                            <span className="text-[11px] text-[var(--theme-text-dim)]">Heart</span>
+                            <span className="text-lg font-bold text-[var(--theme-accent)]">
+                                {lives}%
+                            </span>
+                        </div>
+                    </div>
+
+                    <div className="space-y-1 pt-1.5 border-t border-[var(--theme-border)]">
+                        <div className="flex items-center justify-between text-[10px]">
+                            <span className="text-[var(--theme-text-dim)]">Hot streak</span>
+                            <span className="text-[var(--theme-accent)] font-semibold">
+                                {streak} in a row
+                            </span>
+                        </div>
+                        <div className="w-full h-1.5 rounded-full bg-[var(--theme-bg-base)]/80 overflow-hidden">
                             <div
                                 className="h-full bg-gradient-to-r from-[var(--theme-accent)] via-[var(--theme-accent-alt)] to-[var(--theme-accent)] transition-all"
                                 style={{ width: `${Math.min(streak, 15) / 15 * 100}%` }}
@@ -372,9 +476,9 @@ const GamePage = () => {
                 </div>
 
                 {/* Instructions Summary */}
-                <div className="glass-panel p-6 md:p-8 rounded-2xl flex-grow bg-[var(--theme-surface)] border border-[var(--theme-border)]">
-                    <h3 className="text-sm font-bold text-[var(--theme-text)] mb-4">How to Play</h3>
-                    <ul className="text-xs text-[var(--theme-text-dim)] space-y-3 list-disc list-inside">
+                <div className="glass-panel px-4 py-4 rounded-2xl flex-grow bg-[var(--theme-surface)] border border-[var(--theme-border)]">
+                    <h3 className="text-sm font-bold text-[var(--theme-text)] mb-2">How to Play</h3>
+                    <ul className="text-[11px] text-[var(--theme-text-dim)] space-y-1.5 list-disc list-inside">
                         <li>Look at the image on the left.</li>
                         <li>Solve the math puzzle.</li>
                         <li>Eat the food with the matching number.</li>

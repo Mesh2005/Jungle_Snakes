@@ -6,11 +6,12 @@ interface RoundPanelProps {
     round: RoundData | null;
     loading: boolean;
     timeLeft: number;
+    obscured?: boolean;
 }
 
-const RoundPanel: React.FC<RoundPanelProps> = ({ round, loading, timeLeft }) => {
+const RoundPanel: React.FC<RoundPanelProps> = ({ round, loading, timeLeft, obscured = false }) => {
     return (
-        <div className="glass-panel p-6 md:p-8 rounded-2xl flex flex-col items-center justify-center space-y-6 h-full min-h-[300px] bg-[var(--theme-surface)] border border-[var(--theme-border)]">
+        <div className="glass-panel p-5 md:p-6 rounded-2xl flex flex-col items-center justify-center space-y-4 h-full min-h-[260px] bg-[var(--theme-surface)] border border-[var(--theme-border)]">
             <div className="text-center space-y-2">
                 <h2 className="text-xl font-bold text-[var(--theme-accent)] drop-shadow-[0_0_10px_var(--theme-glow)]">Target</h2>
                 <p className="text-xs text-[var(--theme-text-dim)]">Identify the number!</p>
@@ -23,10 +24,15 @@ const RoundPanel: React.FC<RoundPanelProps> = ({ round, loading, timeLeft }) => 
                     <img
                         src={round.question}
                         alt="Solve this"
-                        className="w-full h-full object-contain"
+                        className={`w-full h-full object-contain transition duration-300 ${obscured ? 'blur-lg scale-[1.03] opacity-70' : ''}`}
                     />
                 ) : (
                     <span className="text-[var(--theme-text-dim)]">No Data</span>
+                )}
+
+                {/* Soft veil when obscured so players can't easily count before starting */}
+                {obscured && !loading && round && (
+                    <div className="absolute inset-0 bg-[var(--theme-bg-base)]/35 pointer-events-none" />
                 )}
 
                 {/* Timer Overlay */}

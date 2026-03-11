@@ -18,7 +18,7 @@ const FOREST_FACTS = [
     "Forests are home to over 80% of the world's terrestrial biodiversity."
 ];
 
-const AFKScreen: React.FC<AFKScreenProps> = ({ onAction, timeoutSeconds = 30 }) => {
+const AFKScreen: React.FC<AFKScreenProps> = ({ onAction, timeoutSeconds = 60 }) => {
     const [isAFK, setIsAFK] = useState(false);
     const { theme } = useTheme();
     const [lastActivity, setLastActivity] = useState(Date.now());
