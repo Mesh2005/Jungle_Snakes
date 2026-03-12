@@ -17,6 +17,11 @@ import { useAudio } from '../context/AudioContext';
 import { checkNewlyUnlockedAchievements } from '../utils/achievements';
 import { ACHIEVEMENTS } from '../data/achievements';
 
+type HeartQuizQuestion = {
+    question: string;
+    correctAnswer: number;
+};
+
 const GamePage = () => {
     const { user, emailVerified, isAdmin } = useAuth();
     const { setTheme } = useTheme();
@@ -29,6 +34,15 @@ const GamePage = () => {
     const { playVFX, musicEnabled, setMusicEnabled } = useAudio();
 
     const [showQuickControls, setShowQuickControls] = useState(false);
+
+    // One-time heart restoration quiz state (very simple math for kids)
+    const [heartQuizUsed, setHeartQuizUsed] = useState(false);
+    const [heartQuizOpen, setHeartQuizOpen] = useState(false);
+    const [quizQuestion, setQuizQuestion] = useState<HeartQuizQuestion | null>(null);
+    const [quizOptions, setQuizOptions] = useState<string[]>([]);
+    const [quizAnswered, setQuizAnswered] = useState(false);
+    const [quizCorrect, setQuizCorrect] = useState<boolean | null>(null);
+    const [reviveCountdown, setReviveCountdown] = useState<number | null>(null);
 
     useEffect(() => {
         if (!user) return;
@@ -105,10 +119,67 @@ const GamePage = () => {
         }
     }, [user, emailVerified, isAdmin]);
 
+    const loadHeartQuizQuestion = useCallback(() => {
+        // Very easy arithmetic: small numbers, add or subtract, always non-negative
+        const a = Math.floor(Math.random() * 10); // 0-9
+        const b = Math.floor(Math.random() * 10); // 0-9
+        const useAddition = Math.random() < 0.7; // mostly addition
+
+        let question: string;
+        let correct: number;
+
+        if (useAddition) {
+            question = `${a} + ${b} = ?`;
+            correct = a + b;
+        } else {
+            const bigger = Math.max(a, b);
+            const smaller = Math.min(a, b);
+            question = `${bigger} - ${smaller} = ?`;
+            correct = bigger - smaller;
+        }
+
+        // Generate 3 simple wrong answers near the correct one
+        const optionSet = new Set<number>();
+        optionSet.add(correct);
+        while (optionSet.size < 4) {
+            const delta = Math.floor(Math.random() * 3) + 1; // 1-3
+            const sign = Math.random() < 0.5 ? -1 : 1;
+            let candidate = correct + sign * delta;
+            if (candidate < 0) candidate = correct + delta;
+            optionSet.add(candidate);
+        }
+
+        const optionsArray = Array.from(optionSet).map(String);
+        // Shuffle
+        for (let i = optionsArray.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [optionsArray[i], optionsArray[j]] = [optionsArray[j], optionsArray[i]];
+        }
+
+        setQuizQuestion({ question, correctAnswer: correct });
+        setQuizOptions(optionsArray);
+    }, []);
+
     const {
         snake, foods, powerups, invisibleUntil, direction, status, score, streak, highStreak, timeLeft, lives, roundVariant, hotStreakLevel,
-        startGame, pauseGame, resumeGame, stopGame, changeDirection, GRID_SIZE
-    } = useSnakeGame(currentRound, advanceRound, saveStats, difficulty);
+        startGame, pauseGame, resumeGame, stopGame, changeDirection, GRID_SIZE, reviveWithHalfHeart, forceGameOver
+    } = useSnakeGame(
+        currentRound,
+        advanceRound,
+        saveStats,
+        difficulty,
+        () => {
+            // Hearts have dropped to zero inside the game hook
+            if (heartQuizUsed) {
+                forceGameOver();
+                return;
+            }
+            setHeartQuizOpen(true);
+            setQuizAnswered(false);
+            setQuizCorrect(null);
+            loadHeartQuizQuestion();
+        }
+    );
 
     // Play sounds on events
     useEffect(() => {
@@ -126,6 +197,15 @@ const GamePage = () => {
     }, [score, status, playVFX]);
 
     const handleStartGame = useCallback(() => {
+        // Reset quiz and overlay state, then start a fresh run
+        setHeartQuizUsed(false);
+        setHeartQuizOpen(false);
+        setQuizQuestion(null);
+        setQuizOptions([]);
+        setQuizAnswered(false);
+        setQuizCorrect(null);
+        setReviveCountdown(null);
+        setShowQuickControls(false);
         startGame();
     }, [startGame]);
 
@@ -228,6 +308,43 @@ const GamePage = () => {
         }
     }, [status]);
 
+    const handleQuizAnswer = (option: string) => {
+        if (!quizQuestion || quizAnswered) return;
+        const correct = option === String(quizQuestion.correctAnswer);
+        setQuizAnswered(true);
+        setQuizCorrect(correct);
+        setHeartQuizUsed(true);
+
+        if (correct) {
+            // Restore hearts to 50%, then show a short countdown before resuming play
+            reviveWithHalfHeart();
+            setHeartQuizOpen(false);
+            setReviveCountdown(3);
+        }
+    };
+
+    const handleQuizGiveUpOrContinue = () => {
+        setHeartQuizUsed(true);
+        setHeartQuizOpen(false);
+        forceGameOver();
+    };
+
+    // After a successful revive quiz, show 3-2-1 countdown then resume the game
+    useEffect(() => {
+        if (reviveCountdown === null) return;
+        if (reviveCountdown <= 0) {
+            setReviveCountdown(null);
+            handleResumeGame();
+            return;
+        }
+
+        const id = window.setTimeout(() => {
+            setReviveCountdown((prev) => (prev === null ? null : prev - 1));
+        }, 1000);
+
+        return () => window.clearTimeout(id);
+    }, [reviveCountdown, handleResumeGame]);
+
     return (
         <div className="min-h-screen md:h-[calc(100vh-4rem)] pt-20 pb-6 flex flex-col md:flex-row max-w-7xl mx-auto px-6 md:px-8 gap-6 md:gap-8 md:overflow-hidden">
             {/* Left Panel: Round Info */}
@@ -294,6 +411,11 @@ const GamePage = () => {
                 <div
                     className="board-shell w-full max-w-2xl border-[var(--theme-border-strong)] bg-[var(--theme-bg-secondary)]/50"
                     onClick={() => {
+                        if (status === 'IDLE') {
+                            // Allow tapping anywhere on the board to start the game
+                            handleStartGame();
+                            return;
+                        }
                         if (status === 'PLAYING') {
                             // Single tap pauses and reveals controls
                             pauseGame();
@@ -304,26 +426,44 @@ const GamePage = () => {
                         }
                     }}
                 >
-                    <div className={`board-shell-inner aspect-square mx-auto flex items-center justify-center transition duration-200 ${status === 'PAUSED' ? 'blur-sm' : ''}`}>
-                        <GameBoard
-                            snake={snake}
-                            foods={foods}
-                            powerups={powerups}
-                            invisibleUntil={invisibleUntil}
-                            gridSize={GRID_SIZE}
-                            direction={direction}
-                            status={status}
-                            difficulty={difficulty}
-                            roundVariant={roundVariant}
-                        />
+                    <div className="board-shell-inner aspect-square mx-auto relative">
+                        <div className={`w-full h-full flex items-center justify-center transition duration-200 ${status === 'PAUSED' ? 'blur-sm' : ''}`}>
+                            <GameBoard
+                                snake={snake}
+                                foods={foods}
+                                powerups={powerups}
+                                invisibleUntil={invisibleUntil}
+                                gridSize={GRID_SIZE}
+                                direction={direction}
+                                status={status}
+                                difficulty={difficulty}
+                                roundVariant={roundVariant}
+                            />
+                        </div>
+                        {reviveCountdown !== null && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-[var(--theme-bg-base)]/40 backdrop-blur-sm">
+                                <div className="text-center">
+                                    <p className="text-xs text-[var(--theme-text-dim)] mb-1 uppercase tracking-wide">
+                                        Get ready
+                                    </p>
+                                    <p className="text-5xl font-black text-[var(--theme-accent)] drop-shadow-[0_0_20px_var(--theme-glow-strong)]">
+                                        {reviveCountdown}
+                                    </p>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
-                    {/* Start Button Overlay (if Idle) */}
-                    {status === 'IDLE' && (
-                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                            <div className="pointer-events-auto">
+                    {/* Start Button Overlay (when not actively playing and no revive countdown) */}
+                    {status !== 'PLAYING' && reviveCountdown === null && (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <div>
                                 <button
-                                    onClick={handleStartGame}
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleStartGame();
+                                    }}
                                     className="px-8 py-4 bg-[var(--theme-accent)] text-[var(--theme-selection-text)] font-bold text-xl rounded-full shadow-[0_0_30px_var(--theme-glow-strong)] hover:scale-105 transition-transform flex items-center gap-2 animate-pulse-slow"
                                 >
                                     <Play className="fill-current" /> START GAME
@@ -352,8 +492,10 @@ const GamePage = () => {
                                         type="button"
                                         onClick={(e) => {
                                             e.stopPropagation();
-                                            handleResumeGame();
+                                            // When resuming from a pause, show a short 3-2-1 countdown
+                                            // and then continue the game (same as revive flow).
                                             setShowQuickControls(false);
+                                            setReviveCountdown(3);
                                         }}
                                         className="px-4 py-2 rounded-full bg-[var(--theme-accent)] text-sm font-semibold text-[var(--theme-selection-text)] shadow-[0_0_20px_var(--theme-glow)]"
                                     >
@@ -519,6 +661,78 @@ const GamePage = () => {
                             <Home className="w-5 h-5" /> Back to Lobby
                         </button>
                     </div>
+                </div>
+            </Modal>
+
+            {/* Heart restoration quiz modal */}
+            <Modal
+                isOpen={heartQuizOpen}
+                // While quiz is open, we control closing via buttons only
+                onClose={handleQuizGiveUpOrContinue}
+                title="Last Chance Quiz"
+            >
+                <div className="space-y-4 text-[var(--theme-text)]">
+                    <p className="text-sm text-[var(--theme-text-dim)]">
+                        Your hearts are gone. Play one quick quiz to restore <span className="font-semibold text-[var(--theme-accent)]">50% heart</span>,
+                        or give up and end the run.
+                    </p>
+
+                    {quizQuestion && (
+                        <div className="space-y-4">
+                            <div>
+                                <p className="font-semibold text-sm">Solve this:</p>
+                                <p className="font-bold text-base mt-1">{quizQuestion.question}</p>
+                            </div>
+                            <div className="grid gap-2">
+                                {quizOptions.map((opt) => (
+                                    <button
+                                        key={opt}
+                                        type="button"
+                                        disabled={quizAnswered}
+                                        onClick={() => handleQuizAnswer(opt)}
+                                        className={`text-left px-3 py-2 rounded-lg border text-sm transition-colors ${
+                                            quizAnswered
+                                                ? opt === String(quizQuestion.correctAnswer)
+                                                    ? 'bg-emerald-600/80 border-emerald-400 text-white'
+                                                    : 'opacity-70'
+                                                : 'bg-[var(--theme-surface)] border-[var(--theme-border)] hover:border-[var(--theme-accent)]'
+                                        }`}
+                                    >
+                                        {opt}
+                                    </button>
+                                ))}
+                            </div>
+
+                            {quizAnswered && (
+                                <div className="flex items-center justify-between pt-2">
+                                    <p className={`text-sm font-semibold ${quizCorrect ? 'text-emerald-400' : 'text-red-400'}`}>
+                                        {quizCorrect ? 'Correct! Hearts restored to 50% – keep playing.' : 'Wrong answer. Game over.'}
+                                    </p>
+                                    {!quizCorrect && (
+                                        <button
+                                            type="button"
+                                            onClick={handleQuizGiveUpOrContinue}
+                                            className="px-4 py-2 rounded-lg bg-red-600/90 text-xs font-semibold text-white border border-red-400/70"
+                                        >
+                                            Continue
+                                        </button>
+                                    )}
+                                </div>
+                            )}
+
+                            {!quizAnswered && (
+                                <div className="flex justify-end pt-1">
+                                    <button
+                                        type="button"
+                                        onClick={handleQuizGiveUpOrContinue}
+                                        className="px-4 py-2 rounded-lg bg-red-600/90 text-xs font-semibold text-white border border-red-400/70"
+                                    >
+                                        Give Up (Game Over)
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
             </Modal>
         </div>

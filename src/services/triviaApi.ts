@@ -12,7 +12,8 @@ interface OpenTriviaResponse {
     results: TriviaQuestion[];
 }
 
-const TRIVIA_URL = 'https://opentdb.com/api.php?amount=1&type=multiple';
+// Restrict to easy questions so the quiz stays kid-friendly
+const TRIVIA_URL = 'https://opentdb.com/api.php?amount=1&difficulty=easy&type=multiple';
 
 // Very small HTML entity decoder for common cases from Open Trivia DB
 const decodeHtml = (text: string): string => {

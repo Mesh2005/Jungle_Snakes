@@ -83,7 +83,8 @@ const Login = () => {
         try {
             const cred = await signInWithPopup(auth, googleProvider);
             const u = cred.user;
-            if (u && !u.emailVerified) {
+            const isNewUser = u.metadata.creationTime === u.metadata.lastSignInTime;
+            if (u && !u.emailVerified && isNewUser) {
                 try {
                     await sendEmailVerification(u);
                 } catch {
@@ -121,7 +122,8 @@ const Login = () => {
         try {
             const cred = await signInWithEmailAndPassword(auth, email, password);
             const u = cred.user;
-            if (u && !u.emailVerified) {
+            const isNewUser = u.metadata.creationTime === u.metadata.lastSignInTime;
+            if (u && !u.emailVerified && isNewUser) {
                 try {
                     await sendEmailVerification(u);
                 } catch {

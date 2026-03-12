@@ -38,12 +38,13 @@ const POWERUP_LIFETIME_MS = 8000;        // despawn after 8s if not eaten
 const GRID_SIZE = 20;
 const INITIAL_SNAKE = [{ x: 10, y: 10 }, { x: 10, y: 11 }, { x: 10, y: 12 }];
 
-// Speed based on difficulty (lower = faster)
+// Speed based on difficulty (lower = faster).
+// Easy should always stay calm and predictable for kids.
 const getSpeedForDifficulty = (difficulty: 'easy' | 'medium' | 'hard'): number => {
     switch (difficulty) {
-        case 'easy': return 160;   // Slow but not sluggish
-        case 'medium': return 110;  // Balanced
-        case 'hard': return 85;     // Challenging but responsive
+        case 'easy': return 190;    // Very gentle speed for small kids
+        case 'medium': return 120;  // Balanced
+        case 'hard': return 90;     // Challenging but responsive
         default: return 110;
     }
 };
@@ -52,7 +53,8 @@ export const useSnakeGame = (
     currentRound: RoundData | null,
     advanceRound: () => void,
     saveStats?: (score: number, streak: number, foodEaten: number, secondsPlayed: number) => void, // Callback to save when game ends
-    difficulty: 'easy' | 'medium' | 'hard' = 'medium'
+    difficulty: 'easy' | 'medium' | 'hard' = 'medium',
+    onHeartsDepleted?: () => void
 ) => {
     const { playVFX } = useAudio();
     const [snake, setSnake] = useState<Position[]>(INITIAL_SNAKE);
@@ -74,7 +76,7 @@ export const useSnakeGame = (
     // Refs for loop state to avoid closure staleness
     const directionRef = useRef<Direction>('UP');
     const livesRef = useRef(100); // heart % mirror
-    const lastLoseLifeAtRef = useRef(0); // throttle: only one life loss per 2 seconds
+    const lastLoseLifeAtRef = useRef(0); // throttle so multiple triggers in same moment only cost one chunk
     const shieldRef = useRef(false);     // shield: absorbs one wrong-eat/timeout or wall/tail hit
     const bounceBackRef = useRef(false); // bounce_back: one wall hit reverses direction
     const doubleScoreUntilRef = useRef(0);
@@ -207,7 +209,9 @@ export const useSnakeGame = (
         }
     };
 
-    // Single place to apply heart damage (wrong eat OR timeout). Throttled so only one chunk per 2s. Shield blocks one loss.
+    // Single place to apply heart damage (wrong eat OR timeout).
+    // Shield blocks one loss. Also throttled so multiple triggers in the same moment
+    // (for example, timeout and wrong food on the same tick) only remove one 25% chunk.
     const loseLife = useCallback(() => {
         if (shieldRef.current) {
             shieldRef.current = false;
@@ -217,20 +221,25 @@ export const useSnakeGame = (
             return;
         }
         const now = Date.now();
-        if (now - lastLoseLifeAtRef.current < 2000) return; // already lost a life recently
+        if (now - lastLoseLifeAtRef.current < 600) {
+            return;
+        }
         lastLoseLifeAtRef.current = now;
-
         setStreak(0);
         livesRef.current = Math.max(0, livesRef.current - 25);
         setLives(livesRef.current);
         playVFX('death');
         if (livesRef.current <= 0) {
-            gameOver();
+            // Hearts fully depleted – pause gameplay and hand control to UI
+            if (gameLoopRef.current) clearInterval(gameLoopRef.current);
+            if (timerRef.current) clearInterval(timerRef.current);
+            setStatus('PAUSED');
+            onHeartsDepleted?.();
         } else {
             advanceRound();
             setTimeLeft(10);
         }
-    }, [advanceRound, gameOver, playVFX]);
+    }, [advanceRound, onHeartsDepleted, playVFX]);
 
     // Keep refs in sync for spawn logic
     snakeRef.current = snake;
@@ -292,7 +301,8 @@ export const useSnakeGame = (
         const isStorm = roundVariant === 'storm';
 
         let speed = isSlow ? baseSpeed * 2 : baseSpeed;
-        if (isStorm) {
+        // For easy mode, keep speed constant even on storm rounds.
+        if (isStorm && difficulty !== 'easy') {
             speed = Math.max(40, Math.floor(speed * 0.85)); // slight speed-up on storm rounds
         }
 
@@ -345,18 +355,21 @@ export const useSnakeGame = (
                         const base = 10 + (streak * 2);
                         const points = Date.now() < doubleScoreUntilRef.current ? base * 2 : base;
                         setScore(s => s + points);
+
+                        // Every correct answer heals 10% heart (up to 100%)
+                        livesRef.current = Math.min(100, livesRef.current + 10);
+                        setLives(livesRef.current);
+
                         setStreak(s => {
                             const newS = s + 1;
                             if (newS > highStreak) setHighStreak(newS);
                             setFoodEaten(prev => prev + 1);
 
-                            // Combo bonus every 3 correct answers in a row: extra score + small heart heal
+                            // Combo bonus every 3 correct answers in a row: extra score + tiny time reward
                             if (newS > 0 && newS % 3 === 0) {
                                 const comboBonus = 50;
                                 setScore(prev => prev + comboBonus);
                                 setTimeLeft(prev => Math.min(prev + 1, 20)); // tiny time reward
-                                livesRef.current = Math.min(100, livesRef.current + 10);
-                                setLives(livesRef.current);
                             }
 
                             return newS;
@@ -451,6 +464,20 @@ export const useSnakeGame = (
 
     const hotStreakLevel = Math.floor(streak / 3);
 
+    // External helpers for special flows (like quiz revive)
+    const reviveWithHalfHeart = useCallback(() => {
+        // Restore heart to 50% and reset timer, but keep status as-is.
+        // The UI (e.g. GamePage) can decide when to actually resume play.
+        livesRef.current = 50;
+        setLives(50);
+        setStreak(0);
+        setTimeLeft(10);
+    }, []);
+
+    const forceGameOver = useCallback(() => {
+        gameOver();
+    }, [gameOver]);
+
     return {
         snake,
         foods,
@@ -471,6 +498,8 @@ export const useSnakeGame = (
         resumeGame,
         stopGame,
         changeDirection,
-        GRID_SIZE
+        GRID_SIZE,
+        reviveWithHalfHeart,
+        forceGameOver
     };
 };

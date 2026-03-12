@@ -35,18 +35,18 @@ const VerifyEmail = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-black via-jungle-900 to-jungle-poison flex items-center justify-center text-white">
-                <Loader2 className="w-8 h-8 animate-spin text-jungle-lime" />
+            <div className="min-h-screen flex items-center justify-center bg-[var(--theme-bg-base)] text-[var(--theme-text)]">
+                <Loader2 className="w-8 h-8 animate-spin text-[var(--theme-accent)]" />
             </div>
         );
     }
 
     if (!user) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-black via-jungle-900 to-jungle-poison flex items-center justify-center px-4 text-white">
+            <div className="min-h-screen flex items-center justify-center px-4 bg-[var(--theme-bg-base)] text-[var(--theme-text)]">
                 <div className="text-center space-y-4">
-                    <p className="text-jungle-lime">You must be signed in to verify your email.</p>
-                    <Link to="/login" className="text-jungle-lime underline font-semibold">Go to Login</Link>
+                    <p className="text-[var(--theme-accent)]">You must be signed in to verify your email.</p>
+                    <Link to="/login" className="text-[var(--theme-accent)] underline font-semibold">Go to Login</Link>
                 </div>
             </div>
         );
@@ -58,26 +58,26 @@ const VerifyEmail = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-black via-jungle-900 to-jungle-poison flex items-center justify-center px-4 py-8 text-white overflow-hidden">
-            <div className="pointer-events-none absolute -top-40 -right-32 w-80 h-80 bg-jungle-lime/18 blur-3xl rounded-full" />
-            <div className="pointer-events-none absolute -bottom-40 -left-24 w-72 h-72 bg-jungle-amber/16 blur-3xl rounded-full" />
+        <div className="min-h-screen md:h-screen flex items-center justify-center px-4 md:px-6 py-10 md:py-0 bg-[var(--theme-bg-base)] text-[var(--theme-text)] overflow-hidden relative">
+            <div className="pointer-events-none absolute -top-40 -right-32 w-80 h-80 bg-[var(--theme-accent)]/18 blur-3xl rounded-full" />
+            <div className="pointer-events-none absolute -bottom-40 -left-24 w-72 h-72 bg-[var(--theme-accent-alt)]/16 blur-3xl rounded-full" />
 
-            <div className="relative w-full max-w-md mx-auto glass-panel bg-black/40 border border-lime-300/25 rounded-2xl shadow-2xl p-8 space-y-6 backdrop-blur-xl z-10">
+            <div className="relative w-full max-w-md mx-auto glass-panel bg-[var(--theme-surface)] border border-[var(--theme-border)] rounded-2xl shadow-2xl p-8 space-y-6 backdrop-blur-xl z-10">
                 <div className="flex justify-center">
-                    <div className="p-4 bg-jungle-lime/20 rounded-full">
-                        <Mail className="w-12 h-12 text-jungle-lime" />
+                    <div className="p-4 bg-[var(--theme-accent)]/20 rounded-full">
+                        <Mail className="w-12 h-12 text-[var(--theme-accent)]" />
                     </div>
                 </div>
                 <div className="text-center space-y-3">
-                    <h1 className="text-2xl font-bold text-lime-100">Verify your email to enter the jungle</h1>
-                    <p className="text-sm text-gray-200/80">
+                    <h1 className="text-2xl font-bold text-[var(--theme-text)]">Verify your email to enter the jungle</h1>
+                    <p className="text-sm text-[var(--theme-text-dim)]">
                         To play ranked games and appear on the leaderboard, you need to confirm your email.
                     </p>
-                    <p className="text-sm text-gray-200/80">
+                    <p className="text-sm text-[var(--theme-text-dim)]">
                         We sent a verification link to
                     </p>
-                    <p className="font-semibold text-jungle-lime break-all">{user.email}</p>
-                    <p className="text-xs text-gray-400 mt-2">
+                    <p className="font-semibold text-[var(--theme-accent)] break-all">{user.email}</p>
+                    <p className="text-xs text-[var(--theme-text-dim)] mt-2">
                         Click the link in that email to verify your account, then return here and tap the button below.
                     </p>
                 </div>
@@ -93,7 +93,7 @@ const VerifyEmail = () => {
                     type="button"
                     onClick={handleCheckVerification}
                     disabled={checking}
-                    className="w-full flex justify-center items-center gap-2 py-3 px-4 rounded-xl text-sm font-semibold text-black bg-gradient-to-r from-jungle-lime to-jungle-fern shadow-[0_0_25px_rgba(45,212,191,0.45)] hover:shadow-[0_0_35px_rgba(45,212,191,0.7)] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="w-full flex justify-center items-center gap-2 py-3 px-4 rounded-xl text-sm font-semibold text-[var(--theme-selection-text)] bg-[var(--theme-accent)] shadow-[0_0_25px_var(--theme-glow)] hover:shadow-[0_0_35px_var(--theme-glow-strong)] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                     {checking ? (
                         <><Loader2 className="w-5 h-5 animate-spin" /> Checking...</>
@@ -119,16 +119,16 @@ const VerifyEmail = () => {
                             }
                         }}
                         disabled={resending}
-                        className="w-full flex justify-center items-center gap-2 py-2 px-4 rounded-xl text-sm font-medium text-jungle-lime border border-jungle-lime/60 hover:bg-jungle-lime/10 transition-colors disabled:opacity-60"
+                        className="w-full flex justify-center items-center gap-2 py-2 px-4 rounded-xl text-sm font-medium text-[var(--theme-accent)] border border-[var(--theme-accent)]/60 hover:bg-[var(--theme-accent)]/10 transition-colors disabled:opacity-60"
                     >
                         {resending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                         Resend verification email
                     </button>
-                    {resendDone && <p className="text-center text-xs text-jungle-lime">Check your inbox (and spam).</p>}
+                    {resendDone && <p className="text-center text-xs text-[var(--theme-accent)]">Check your inbox (and spam).</p>}
                 </div>
 
-                <p className="text-center text-xs text-gray-400">
-                    <Link to="/home" className="text-jungle-lime underline">Go to home</Link>
+                <p className="text-center text-xs text-[var(--theme-text-dim)]">
+                    <Link to="/home" className="text-[var(--theme-accent)] underline">Go to home</Link>
                 </p>
             </div>
         </div>
