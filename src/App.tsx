@@ -1,32 +1,34 @@
-import { useEffect } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Navbar from './components/Navbar';
-import Home from './pages/Home';
-import GamePage from './pages/GamePage';
-import Profile from './pages/Profile';
+import { RouteLoader } from './components/RouteLoader';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import LoadingPage from './pages/LoadingPage';
 import Settings from './pages/Settings';
 import VerifyEmail from './pages/VerifyEmail';
 import Leaderboard from './pages/Leaderboard';
-import Achievements from './pages/Achievements';
-import { ThemeProvider, useTheme } from './context/ThemeContext';
+import Profile from './pages/Profile';
+import { ThemeProvider } from './context/ThemeContext';
 import { AudioProvider } from './context/AudioContext';
 import { playClickSound } from './utils/clickSound';
 import AFKScreen from './components/AFKScreen';
 
+const Home = lazy(() => import('./pages/Home'));
+const GamePage = lazy(() => import('./pages/GamePage'));
+const Achievements = lazy(() => import('./pages/Achievements'));
+
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
-  if (loading) return <div className="min-h-screen pt-20 text-center text-white">Loading...</div>;
+  if (loading) return <RouteLoader />;
   if (!user) return <Navigate to="/login" replace />;
   return children;
 };
 
 const VerifiedOnlyRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading, emailVerified, isAdmin } = useAuth();
-  if (loading) return <div className="min-h-screen pt-20 text-center text-white">Loading...</div>;
+  if (loading) return <RouteLoader />;
   if (!user) return <Navigate to="/login" replace />;
   if (!emailVerified && !isAdmin) return <Navigate to="/verify-email" replace />;
   return children;
@@ -35,7 +37,6 @@ const VerifiedOnlyRoute = ({ children }: { children: React.ReactNode }) => {
 
 
 const AppContent = () => {
-  const { theme } = useTheme();
   const location = useLocation();
   const hideNavbarOn = ['/', '/login', '/signup'];
   const shouldHideNavbar = hideNavbarOn.includes(location.pathname);
@@ -57,27 +58,29 @@ const AppContent = () => {
     <div className="min-h-screen bg-transparent text-[var(--theme-text)] font-sans selection:bg-[var(--theme-selection-bg)] selection:text-[var(--theme-selection-text)] overflow-auto transition-colors duration-300">
       <AFKScreen onAction={() => console.log('User is back!')} />
       {!shouldHideNavbar && <Navbar />}
-      <Routes>
-        <Route path="/" element={<LoadingPage />} />
-        <Route path="/home" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/verify-email" element={<VerifyEmail />} />
-        <Route path="/game" element={<VerifiedOnlyRoute><GamePage /></VerifiedOnlyRoute>} />
-        <Route path="/leaderboard" element={<Leaderboard />} />
-        <Route path="/achievements" element={
-          <ProtectedRoute>
-            <Achievements />
-          </ProtectedRoute>
-        } />
-        <Route path="/profile" element={
-          <ProtectedRoute>
-            <Profile />
-          </ProtectedRoute>
-        } />
-        <Route path="/settings" element={<Settings />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      <Suspense fallback={<RouteLoader />}>
+        <Routes>
+          <Route path="/" element={<LoadingPage />} />
+          <Route path="/home" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
+          <Route path="/game" element={<VerifiedOnlyRoute><GamePage /></VerifiedOnlyRoute>} />
+          <Route path="/leaderboard" element={<Leaderboard />} />
+          <Route path="/achievements" element={
+            <ProtectedRoute>
+              <Achievements />
+            </ProtectedRoute>
+          } />
+          <Route path="/profile" element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          } />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
     </div>
   );
 };

@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Play, Trophy, Users, Settings as SettingsIcon, LogOut, LayoutGrid, Zap, Flame, HelpCircle, Gamepad2, Music, VolumeX } from 'lucide-react';
+import { Play, Trophy, Settings as SettingsIcon, LayoutGrid, Zap, Flame, HelpCircle, Music, VolumeX } from 'lucide-react';
 import Modal from '../components/ui/Modal';
 import { FallingSnakes } from '../components/FallingSnakes';
+import { LightRays } from '../components/LightRays';
 import { useTrivia } from '../hooks/useTrivia';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
@@ -58,6 +59,20 @@ const Home = () => {
 
     return (
         <div className="min-h-screen md:h-[calc(100vh-4rem)] pt-16 flex flex-col relative bg-gradient-to-b from-[var(--theme-bg-base)] to-[var(--theme-bg-secondary)] md:overflow-hidden">
+            {/* WebGL light rays – theme-responsive (uses --theme-accent) */}
+            <div className="absolute inset-0 z-0">
+                <LightRays
+                    raysOrigin="top-center"
+                    raysSpeed={1.2}
+                    lightSpread={1.1}
+                    rayLength={1.6}
+                    followMouse={true}
+                    mouseInfluence={0.25}
+                    noiseAmount={0.03}
+                    distortion={0.06}
+                />
+            </div>
+
             {/* Extreme Global Glows */}
             <div className="peripheral-glow" />
 

@@ -1,6 +1,5 @@
 import { useEffect, useCallback, useRef, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useTheme } from '../context/ThemeContext';
 import { usePrefetchRound } from '../hooks/usePrefetchRound';
 import { useSnakeGame } from '../hooks/useSnakeGame';
 import GameBoard from '../components/GameBoard';
@@ -24,7 +23,6 @@ type HeartQuizQuestion = {
 
 const GamePage = () => {
     const { user, emailVerified, isAdmin } = useAuth();
-    const { setTheme } = useTheme();
     const navigate = useNavigate();
     const { currentRound, advanceRound, loading: roundLoading } = usePrefetchRound();
 
@@ -54,11 +52,6 @@ const GamePage = () => {
         };
         fetchTotalScore();
     }, [user]);
-
-    // Always use jungle (forest) theme on the game screen
-    useEffect(() => {
-        setTheme('jungle');
-    }, [setTheme]);
 
     // Get difficulty from localStorage
     const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
