@@ -241,9 +241,11 @@ export const useSnakeGame = (
         }
     }, [advanceRound, onHeartsDepleted, playVFX]);
 
-    // Keep refs in sync for spawn logic
-    snakeRef.current = snake;
-    foodsRef.current = foods;
+    // Keep refs in sync for spawn logic (in effect to avoid ref access during render)
+    useEffect(() => {
+        snakeRef.current = snake;
+        foodsRef.current = foods;
+    }, [snake, foods]);
 
     // Apply powerup effect and remove powerup
     const applyPowerup = useCallback((p: Powerup) => {
@@ -422,6 +424,7 @@ export const useSnakeGame = (
     // Re-init round when ID changes
     useEffect(() => {
         if (status === 'PLAYING' && currentRound) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect -- init round state when round ID changes
             initRound();
         }
     }, [currentRound?.id, status]); // Only refetch foods when ID changes or status becomes playing

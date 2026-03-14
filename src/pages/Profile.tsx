@@ -3,10 +3,8 @@ import { useAuth } from '../context/AuthContext';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, User, Trophy, Calendar, Zap, Home, Sparkles, Crown, Star, Flame, Award, Target, TrendingUp, Brain, Gamepad2, Settings } from 'lucide-react';
-import { FallingSnakes } from '../components/FallingSnakes';
+import { User, Trophy, Calendar, Zap, Home, Sparkles, Crown, Star, Flame, Award, Target, TrendingUp, Brain, Gamepad2, Settings } from 'lucide-react';
 import { getRankInfo } from '../utils/rank';
-import StatCard from '../components/ui/StatCard';
 
 interface UserStats {
     bestScore?: number;
@@ -27,7 +25,7 @@ const AVATAR_PRESETS = [
 ];
 
 const Profile = () => {
-    const { user, signOut } = useAuth();
+    const { user } = useAuth();
     const navigate = useNavigate();
     const [stats, setStats] = useState<UserStats | null>(null);
     const [loading, setLoading] = useState(true);
@@ -114,7 +112,6 @@ const Profile = () => {
             {/* Ambient Backgrounds */}
             <div className="peripheral-glow" style={{ opacity: 0.5 }} />
             <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden opacity-30">
-                <FallingSnakes />
                 <div className="absolute top-0 left-[-10%] w-[30%] h-full bg-gradient-to-b from-[var(--theme-accent)]/15 to-transparent blur-3xl animate-sunbeam" />
                 <div className="absolute top-[20%] right-[-10%] w-[120%] h-[100%] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[var(--theme-accent)]/5 via-transparent to-transparent blur-[120px] animate-pulse-slow" />
             </div>

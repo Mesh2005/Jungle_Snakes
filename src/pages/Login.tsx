@@ -3,7 +3,8 @@ import { signInWithEmailAndPassword, signInWithPopup, sendEmailVerification } fr
 import { auth, googleProvider } from '../services/firebase';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, LogIn, AlertCircle, Volume2, VolumeX } from 'lucide-react';
-import { FallingSnakes } from '../components/FallingSnakes';
+import { SquaresBackground } from '../components/SquaresBackground';
+import { Fireflies } from '../components/Fireflies';
 import { useAudio } from '../context/AudioContext';
 
 const EMAIL_STORAGE_KEY = 'jungle-auth-email';
@@ -94,13 +95,14 @@ const Login = () => {
             } else {
                 navigate('/home');
             }
-        } catch (err: any) {
-            if (err?.code === 'auth/popup-closed-by-user') {
+        } catch (err: unknown) {
+            const e = err as { code?: string; message?: string };
+            if (e?.code === 'auth/popup-closed-by-user') {
                 // Silent
             } else {
-                const msg = getProviderErrorMsg(err?.code) || err?.message || 'Failed to sign in with Google.';
+                const msg = getProviderErrorMsg(e?.code ?? '') || e?.message || 'Failed to sign in with Google.';
                 setError(msg);
-                console.error('Provider login error:', err?.code, err);
+                console.error('Provider login error:', e?.code, err);
             }
         } finally {
             setLoading(false);
@@ -133,8 +135,8 @@ const Login = () => {
             } else {
                 navigate('/home');
             }
-        } catch (err: any) {
-            const message = mapAuthError(err?.code);
+        } catch (err: unknown) {
+            const message = mapAuthError((err as { code?: string })?.code);
             setError(message);
             console.error(err);
         } finally {
@@ -144,12 +146,25 @@ const Login = () => {
 
     return (
         <div className="relative min-h-screen bg-[var(--theme-bg-base)] flex items-center justify-center px-4 py-8 text-[var(--theme-text)] overflow-hidden">
+            {/* Animated grid background */}
+            <div className="absolute inset-0 z-0 opacity-40">
+                <SquaresBackground direction="diagonal" speed={0.5} squareSize={40} />
+            </div>
             {/* dynamic theme glows */}
             <div className="pointer-events-none absolute -top-40 -left-32 w-80 h-80 bg-[var(--theme-accent)]/10 blur-3xl rounded-full animate-pulse-slow" />
             <div className="pointer-events-none absolute -bottom-40 -right-24 w-72 h-72 bg-[var(--theme-accent-alt)]/10 blur-3xl rounded-full animate-pulse-slow" />
-            <FallingSnakes />
             {/* subtle moving gradient band */}
             <div className="pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 h-64 bg-gradient-to-r from-[var(--theme-accent)]/5 via-[var(--theme-accent-alt)]/5 to-[var(--theme-accent)]/5 blur-3xl opacity-80 animate-float" />
+            {/* Ambient mist and floating particles */}
+            <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden opacity-50">
+                <div className="absolute top-[-10%] left-[-20%] w-[140%] h-[120%] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[var(--theme-accent)]/10 via-transparent to-transparent blur-[100px] animate-pulse-slow mix-blend-screen" style={{ animationDuration: '8s' }} />
+                <div className="absolute top-[20%] right-[-10%] w-[120%] h-[100%] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[var(--theme-accent-alt)]/10 via-transparent to-transparent blur-[120px] animate-pulse-slow mix-blend-screen" style={{ animationDuration: '12s', animationDelay: '2s' }} />
+                <div className="absolute top-[30%] left-[20%] w-32 h-32 rounded-full bg-[var(--theme-accent)]/15 blur-[40px] animate-float-slow" style={{ animationDuration: '10s' }} />
+                <div className="absolute top-[60%] right-[25%] w-48 h-48 rounded-full bg-[var(--theme-accent-alt)]/15 blur-[50px] animate-float-slow" style={{ animationDuration: '14s', animationDelay: '2s' }} />
+                <div className="absolute bottom-[20%] left-[40%] w-40 h-40 rounded-full bg-[var(--theme-accent)]/10 blur-[45px] animate-float-slow" style={{ animationDuration: '12s', animationDelay: '4s' }} />
+            </div>
+
+            <Fireflies />
 
             <div className="relative w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-10 items-center z-10">
                 {/* Left: Game name + flavor */}

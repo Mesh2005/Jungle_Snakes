@@ -1,20 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
-import { Home, Volume2, Zap, Palette, Check, Music, Play } from 'lucide-react';
+import { Home, Volume2, Zap, Palette, Check, Music } from 'lucide-react';
 import { useAudio } from '../context/AudioContext';
 
 const Settings = () => {
     const navigate = useNavigate();
     const { theme, setTheme } = useTheme();
-    const { musicVolume, setMusicVolume, musicEnabled, setMusicEnabled, vfxEnabled, setVFXEnabled, playVFX } = useAudio();
-    const [animationsEnabled, setAnimationsEnabled] = useState(true);
-
-    // Load settings from localStorage on mount
-    useEffect(() => {
-        const savedAnimations = localStorage.getItem('animationsEnabled');
-        if (savedAnimations !== null) setAnimationsEnabled(savedAnimations === 'true');
-    }, []);
+    const { musicVolume, setMusicVolume, musicEnabled, setMusicEnabled, vfxEnabled, setVFXEnabled } = useAudio();
+    const [animationsEnabled, setAnimationsEnabled] = useState(() => {
+        const saved = localStorage.getItem('animationsEnabled');
+        return saved !== null ? saved === 'true' : true;
+    });
 
 
 

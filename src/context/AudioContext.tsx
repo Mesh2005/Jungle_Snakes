@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { useTheme } from './ThemeContext';
 
@@ -30,8 +31,12 @@ const TRACK: Record<string, string> = {
 let _vfxCtx: AudioContext | null = null;
 function getVfxCtx(): AudioContext {
     if (!_vfxCtx) {
-        const AC = window.AudioContext || (window as any).webkitAudioContext;
-        _vfxCtx = new AC();
+        const W = window as unknown as { AudioContext?: typeof AudioContext; webkitAudioContext?: typeof AudioContext };
+        const AC = W.AudioContext ?? W.webkitAudioContext;
+        if (!AC) throw new Error('AudioContext not supported');
+        const ctx = new AC();
+        _vfxCtx = ctx;
+        return ctx;
     }
     return _vfxCtx;
 }
@@ -111,7 +116,6 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             document.addEventListener(ev, unlock));
         return () => ['mousedown', 'keydown', 'touchstart'].forEach(ev =>
             document.removeEventListener(ev, unlock));
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // ── Switch track when theme changes ───────────────────────────────────────
@@ -119,7 +123,6 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         if (unlockedRef.current) {
             switchTrack(theme, volRef.current, enableRef.current);
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [theme]);
 
     // ── Live volume control ───────────────────────────────────────────────────

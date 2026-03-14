@@ -21,9 +21,10 @@ export const useTrivia = () => {
                 () => Math.random() - 0.5
             );
             setAnswers(shuffled);
-        } catch (err: any) {
-            if (err?.name === 'AbortError') return;
-            setError(err?.message || 'Failed to load trivia.');
+        } catch (err: unknown) {
+            const e = err as { name?: string; message?: string };
+            if (e?.name === 'AbortError') return;
+            setError(e?.message || 'Failed to load trivia.');
         } finally {
             setLoading(false);
         }

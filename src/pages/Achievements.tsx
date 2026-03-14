@@ -1,15 +1,14 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { useNavigate } from 'react-router-dom';
-import { Trophy, Home, Star, Target, Zap, Shield, Sparkles, TrendingUp, Lock, CheckCircle2, ChevronRight, Award, Flame } from 'lucide-react';
-import { FallingSnakes } from '../components/FallingSnakes';
+import { Trophy, Home, Shield, Sparkles, TrendingUp, CheckCircle2, Award } from 'lucide-react';
 import { ACHIEVEMENTS } from '../data/achievements';
 import type { Achievement, AchievementCategory } from '../data/achievements';
 import type { UserStats } from '../utils/achievements';
 
-const CATEGORIES: { id: AchievementCategory | 'all'; label: string; icon: any }[] = [
+const CATEGORIES: { id: AchievementCategory | 'all'; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
     { id: 'all', label: 'All', icon: Award },
     { id: 'progression', label: 'Progress', icon: TrendingUp },
     { id: 'skill', label: 'Skill', icon: Trophy },
@@ -90,7 +89,6 @@ const Achievements = () => {
 
     return (
         <div className="min-h-screen pt-24 pb-16 relative bg-[var(--theme-bg-base)] overflow-x-hidden">
-            <FallingSnakes />
             <div className="peripheral-glow" style={{ opacity: 0.4 }} />
 
             <main className="container mx-auto px-4 relative z-10 max-w-6xl">
@@ -134,7 +132,7 @@ const Achievements = () => {
                     {CATEGORIES.map(cat => (
                         <button
                             key={cat.id}
-                            onClick={() => setActiveCategory(cat.id as any)}
+                            onClick={() => setActiveCategory(cat.id)}
                             className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl font-bold text-xs uppercase tracking-widest transition-all ${activeCategory === cat.id
                                 ? 'bg-[var(--theme-accent)] text-[var(--theme-selection-text)] shadow-[0_0_20px_var(--theme-glow)]'
                                 : 'bg-[var(--theme-surface)] text-[var(--theme-text-dim)] border border-[var(--theme-border)] hover:border-[var(--theme-accent)]/50'

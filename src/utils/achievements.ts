@@ -1,5 +1,4 @@
 import { ACHIEVEMENTS } from '../data/achievements';
-import type { Achievement } from '../data/achievements';
 
 export interface UserStats {
     totalGames?: number;

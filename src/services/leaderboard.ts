@@ -73,7 +73,7 @@ export async function getLeaderboard(): Promise<LeaderboardEntry[]> {
     const results: LeaderboardEntry[] = [];
 
     for (const d of snapshot.docs) {
-        const data = d.data() as any;
+        const data = d.data() as { userId?: string; email?: string; bestScore?: number; bestStreak?: number; totalGames?: number; avgScore?: number; updatedAt?: unknown };
         const userId = data.userId ?? d.id;
         const email: string = data.email ?? '';
 

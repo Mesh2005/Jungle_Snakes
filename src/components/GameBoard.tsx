@@ -30,8 +30,14 @@ const POWERUP_STYLE: Record<PowerupType, { bg: string; Icon: React.ComponentType
     slow: { bg: 'bg-violet-500', Icon: Gauge }
 };
 
-const GameBoard: React.FC<GameBoardProps> = ({ snake, foods, powerups, invisibleUntil = 0, gridSize, status, difficulty = 'medium', roundVariant = 'normal' }) => {
-    const isInvisible = invisibleUntil > 0 && Date.now() < invisibleUntil;
+const GameBoard: React.FC<GameBoardProps> = ({ snake, foods, powerups, invisibleUntil = 0, gridSize, status, roundVariant = 'normal' }) => {
+    const [now, setNow] = React.useState(() => Date.now());
+    React.useEffect(() => {
+        if (invisibleUntil <= 0) return;
+        const t = setInterval(() => setNow(Date.now()), 100);
+        return () => clearInterval(t);
+    }, [invisibleUntil]);
+    const isInvisible = invisibleUntil > 0 && now < invisibleUntil;
     // Create grid cells
     const cells = useMemo(() => {
         return Array.from({ length: gridSize * gridSize }, (_, i) => ({

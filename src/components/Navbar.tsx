@@ -9,7 +9,7 @@ const Navbar = () => {
     const { user, signOut } = useAuth();
     const navigate = useNavigate();
     const [isOpen, setIsOpen] = useState(false);
-    const [displayName, setDisplayName] = useState<string | null>(null);
+    const [, setDisplayName] = useState<string | null>(null);
 
     useEffect(() => {
         const loadName = async () => {

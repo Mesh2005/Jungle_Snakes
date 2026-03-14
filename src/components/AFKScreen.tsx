@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { MousePointer2, Keyboard, Zap, Ghost } from 'lucide-react';
-import { useTheme } from '../context/ThemeContext';
 
 interface AFKScreenProps {
     onAction: () => void;
@@ -20,8 +19,7 @@ const FOREST_FACTS = [
 
 const AFKScreen: React.FC<AFKScreenProps> = ({ onAction, timeoutSeconds = 60 }) => {
     const [isAFK, setIsAFK] = useState(false);
-    const { theme } = useTheme();
-    const [lastActivity, setLastActivity] = useState(Date.now());
+    const [lastActivity, setLastActivity] = useState(() => Date.now());
     const [factIndex, setFactIndex] = useState(0);
 
     const resetActivity = useCallback(() => {

@@ -5,13 +5,12 @@ import { useSnakeGame } from '../hooks/useSnakeGame';
 import GameBoard from '../components/GameBoard';
 import RoundPanel from '../components/RoundPanel';
 import Modal from '../components/ui/Modal';
-import { doc, setDoc, getDoc, increment, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { submitLeaderboardEntry } from '../services/leaderboard';
 import { RefreshCw, Play, Trophy, Home, Volume2, VolumeX } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { getRankInfo } from '../utils/rank';
-import { playClickSound } from '../utils/clickSound';
 import { useAudio } from '../context/AudioContext';
 import { checkNewlyUnlockedAchievements } from '../utils/achievements';
 import { ACHIEVEMENTS } from '../data/achievements';
@@ -54,14 +53,10 @@ const GamePage = () => {
     }, [user]);
 
     // Get difficulty from localStorage
-    const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
-
-    useEffect(() => {
-        const savedDifficulty = localStorage.getItem('difficulty');
-        if (savedDifficulty && ['easy', 'medium', 'hard'].includes(savedDifficulty)) {
-            setDifficulty(savedDifficulty as 'easy' | 'medium' | 'hard');
-        }
-    }, []);
+    const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>(() => {
+        const saved = localStorage.getItem('difficulty');
+        return (saved && ['easy', 'medium', 'hard'].includes(saved)) ? saved as 'easy' | 'medium' | 'hard' : 'medium';
+    });
 
     const saveStats = useCallback(async (score: number, streak: number, foodEaten: number, secondsPlayed: number) => {
         if (!user) return;
@@ -153,8 +148,9 @@ const GamePage = () => {
         setQuizOptions(optionsArray);
     }, []);
 
+    const forceGameOverRef = useRef<() => void>(() => {});
     const {
-        snake, foods, powerups, invisibleUntil, direction, status, score, streak, highStreak, timeLeft, lives, roundVariant, hotStreakLevel,
+        snake, foods, powerups, invisibleUntil, direction, status, score, streak, highStreak, timeLeft, lives, roundVariant,
         startGame, pauseGame, resumeGame, stopGame, changeDirection, GRID_SIZE, reviveWithHalfHeart, forceGameOver
     } = useSnakeGame(
         currentRound,
@@ -162,9 +158,8 @@ const GamePage = () => {
         saveStats,
         difficulty,
         () => {
-            // Hearts have dropped to zero inside the game hook
             if (heartQuizUsed) {
-                forceGameOver();
+                forceGameOverRef.current();
                 return;
             }
             setHeartQuizOpen(true);
@@ -173,6 +168,9 @@ const GamePage = () => {
             loadHeartQuizQuestion();
         }
     );
+    useEffect(() => {
+        forceGameOverRef.current = forceGameOver;
+    }, [forceGameOver]);
 
     // Play sounds on events
     useEffect(() => {
@@ -297,6 +295,7 @@ const GamePage = () => {
     // Hide quick controls when game resets or ends
     useEffect(() => {
         if (status === 'IDLE' || status === 'GAME_OVER') {
+            // eslint-disable-next-line react-hooks/set-state-in-effect -- sync UI with game status
             setShowQuickControls(false);
         }
     }, [status]);
@@ -326,6 +325,7 @@ const GamePage = () => {
     useEffect(() => {
         if (reviveCountdown === null) return;
         if (reviveCountdown <= 0) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect -- countdown finished, sync and resume
             setReviveCountdown(null);
             handleResumeGame();
             return;
