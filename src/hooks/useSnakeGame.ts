@@ -85,6 +85,7 @@ export const useSnakeGame = (
     const nextDirectionRef = useRef<Direction>('UP'); // Buffer for next tick
     const gameLoopRef = useRef<number | null>(null);
     const timerRef = useRef<number | null>(null);
+    const loseLifeRef = useRef<() => void>(() => {});
 
     // Initialize round (spawn foods)
     const initRound = useCallback(() => {
@@ -240,6 +241,8 @@ export const useSnakeGame = (
             setTimeLeft(10);
         }
     }, [advanceRound, onHeartsDepleted, playVFX]);
+
+    loseLifeRef.current = loseLife;
 
     // Keep refs in sync for spawn logic (in effect to avoid ref access during render)
     useEffect(() => {
@@ -401,15 +404,14 @@ export const useSnakeGame = (
         };
     }, [status, foods, powerups, streak, highStreak, advanceRound, gameOver, difficulty, loseLife, applyPowerup, slowUntil, roundVariant]);
 
-    // Round Timer
+    // Round Timer (only depend on status so the interval is not cleared on every re-render)
     useEffect(() => {
         if (status !== 'PLAYING') return;
 
         timerRef.current = window.setInterval(() => {
             setTimeLeft(t => {
                 if (t <= 1) {
-                    // Time's up - lose one life (loseLife throttles so wrong-eat + timeout = only 1 life)
-                    loseLife();
+                    loseLifeRef.current();
                     return 10;
                 }
                 return t - 1;
@@ -419,7 +421,7 @@ export const useSnakeGame = (
         return () => {
             if (timerRef.current) clearInterval(timerRef.current);
         };
-    }, [status, loseLife]);
+    }, [status]);
 
     // Re-init round when ID changes
     useEffect(() => {
